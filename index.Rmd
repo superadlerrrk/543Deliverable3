@@ -1,0 +1,78 @@
+---
+title: "Deliverable3"
+output: html_notebook
+---
+
+install packages for analysis
+```{r}
+installed.packages("rio")
+installed.packages("ggplot2")
+installed.packages("DescTools")
+installed.packages("dplyr")
+```
+
+```{r}
+library(rio)
+install_formats()
+rm(list = ls())
+
+library(ggplot2)
+library(DescTools)
+library(dplyr)
+```
+
+Getting the data TABLE from the file
+```{r}
+link='https://github.com/superadlerrrk/543/blob/main/Deliverable1/Crime_Data.csv?raw=true'
+crime = import(link)
+```
+
+Group and summarize the data
+```{r}
+crime$grouped_time <- cut(crime$"Occurred Time", 
+      breaks = c(0, 1, 559, 1159, 1759, 2359),
+      labels = c("Unknown", "Midnight", "Morning", "Afternoon", "Evening"),
+      include.lowest = TRUE)
+
+crime$offense_category <- gsub("-.*", "", crime$`Primary Offense Description`)
+
+off_ctgr <- unique(crime$`offense_category`)
+
+crime_counts <- crime %>%
+  group_by(offense_category, Neighborhood) %>%
+  summarize(count = n()) %>%
+  ungroup()
+```
+
+Create the plot
+```{r}
+ggplot(crime_counts, aes(x = offense_category, y = Neighborhood, fill = count)) +
+  geom_tile() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1,size = 4),
+        axis.text.y = element_text(size = 4)) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(title = "Count of entries by offense category and Neighborhood",
+       x = "Offense category",
+       y = "Neighborhood")
+```
+
+Group and summarize the data
+```{r}
+crime_counts <- crime %>%
+  group_by(grouped_time, offense_category) %>%
+  summarize(count = n()) %>%
+  ungroup()
+```
+
+Create the plot
+```{r}
+ggplot(crime_counts, aes(x = grouped_time, y = offense_category, fill = count)) +
+  geom_tile() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1,size = 4),
+        axis.text.y = element_text(size = 4)) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(title = "Count of entries by offense category and grouped_time",
+       x = "Grouped_time",
+       y = "Offense category")
+```
+
